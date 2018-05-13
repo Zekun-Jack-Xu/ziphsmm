@@ -1,0 +1,441 @@
+?fft
+x <- 1:4
+fft(x)
+fft(fft(x), inverse = TRUE)/length(x)
+a=matrix(c(1,2,3,4),2,2)
+b=c(1,2)
+b*a
+b=matrix(c(2,3,4,5),2,2)
+b[1,]*a
+a
+b
+exp(0.42)
+exp(0.08)
+exp(0.07)
+install.packages("FKF")
+?fkf
+library(FKF)
+?fkf
+n <- 1000#
+#
+## Set the AR parameters#
+ar1 <- 0.6#
+ar2 <- 0.2#
+ma1 <- -0.2#
+sigma <- sqrt(0.2)#
+#
+## Sample from an ARMA(2, 1) process#
+a <- arima.sim(model = list(ar = c(ar1, ar2), ma = ma1), n = n,#
+               innov = rnorm(n) * sigma)
+a
+arma21ss <- function(ar1, ar2, ma1, sigma) {#
+    Tt <- matrix(c(ar1, ar2, 1, 0), ncol = 2)#
+    Zt <- matrix(c(1, 0), ncol = 2)#
+    ct <- matrix(0)#
+    dt <- matrix(0, nrow = 2)#
+    GGt <- matrix(0)#
+    H <- matrix(c(1, ma1), nrow = 2) * sigma#
+    HHt <- H %*% t(H)#
+    a0 <- c(0, 0)#
+    P0 <- matrix(1e6, nrow = 2, ncol = 2)#
+    return(list(a0 = a0, P0 = P0, ct = ct, dt = dt, Zt = Zt, Tt = Tt, GGt = GGt,#
+                HHt = HHt))#
+}
+objective <- function(theta, yt) {#
+    sp <- arma21ss(theta["ar1"], theta["ar2"], theta["ma1"], theta["sigma"])#
+    ans <- fkf(a0 = sp$a0, P0 = sp$P0, dt = sp$dt, ct = sp$ct, Tt = sp$Tt,#
+               Zt = sp$Zt, HHt = sp$HHt, GGt = sp$GGt, yt = yt)#
+    return(-ans$logLik)#
+}#
+#
+theta <- c(ar = c(0, 0), ma1 = 0, sigma = 1)#
+fit <- optim(theta, objective, yt = rbind(a), hessian = TRUE)#
+fit#
+#
+## Confidence intervals#
+rbind(fit$par - qnorm(0.975) * sqrt(diag(solve(fit$hessian))),#
+      fit$par + qnorm(0.975) * sqrt(diag(solve(fit$hessian))))#
+#
+## Filter the series with estimated parameter values#
+sp <- arma21ss(fit$par["ar1"], fit$par["ar2"], fit$par["ma1"], fit$par["sigma"])#
+ans <- fkf(a0 = sp$a0, P0 = sp$P0, dt = sp$dt, ct = sp$ct, Tt = sp$Tt,#
+           Zt = sp$Zt, HHt = sp$HHt, GGt = sp$GGt, yt = rbind(a))
+plot(ans, at.idx = 1, att.idx = NA, CI = NA)#
+lines(a, lty = "dotted")
+a<<-1
+a
+a<<<<-2
+a<<-2
+a
+dpois(0,0)
+dpois(1,0)
+rpois(1,0)
+source("~/Desktop/research/hmm_tut_cat/program/ZIPHMM.R")
+rshiftpois(5,2)
+rshiftpois(100,2)
+rshiftpois(100,1)
+exp(-1)
+table(rshiftpois(1000,1))
+multinomrand(100,3,c(0.1,0.2,0.7),c(1,2,3))
+table(multinomrand(100,3,c(0.1,0.2,0.7),c(1,2,3)))
+rpois(0.01)
+rpois(1,0.01)
+dpois(1,0.0001)
+install.packages("ars")
+library(ars)
+f<-function(x,mu=0,sigma=1){-1/(2*sigma^2)*(x-mu)^2}#
+fprima<-function(x,mu=0,sigma=1){-1/sigma^2*(x-mu)}
+f
+fprima
+mysample<-ars(20,f,fprima,mu=2,sigma=3)
+mysample
+hist(mysample)
+install.packages("mixAK")
+library(mixAK)
+ars
+library(ars)
+ars
+ls()
+ls
+ls()
+ars
+hermite <- function (points, z) {#
+  p1 <- 1/pi^0.4#
+  p2 <- 0#
+  for (j in 1:points) {#
+    p3 <- p2#
+    p2 <- p1#
+    p1 <- z * sqrt(2/j) * p2 - sqrt((j - 1)/j) * p3#
+  }#
+  pp <- sqrt(2 * points) * p2#
+  c(p1, pp)#
+}
+gauss.hermite <- function (points, iterlim = 50) {#
+  x <- w <- rep(0, points)#
+  m <- (points + 1)/2#
+  for (i in 1:m) {#
+    z <- if (i == 1) #
+      sqrt(2 * points + 1) - 2 * (2 * points + 1)^(-1/6)#
+    else if (i == 2) #
+      z - sqrt(points)/z#
+    else if (i == 3 || i == 4) #
+      1.9 * z - 0.9 * x[i - 2]#
+    else 2 * z - x[i - 2]#
+    for (j in 1:iterlim) {#
+      z1 <- z#
+      p <- hermite(points, z)#
+      z <- z1 - p[1]/p[2]#
+      if (abs(z - z1) <= 1e-15) #
+        break#
+    }#
+    if (j == iterlim) #
+      warning("iteration limit exceeded")#
+    x[points + 1 - i] <- -(x[i] <- z)#
+    w[i] <- w[points + 1 - i] <- 2/p[2]^2#
+  }#
+  r <- cbind(x * sqrt(2), w/sum(w))#
+  colnames(r) <- c("Points", "Weights")#
+  r#
+}
+gauss.hermit(10)
+gauss.hermite(10)
+mgauss.hermite <- function(n, mu, sigma, prune=NULL) {#
+  if(!all(dim(sigma) == length(mu)))#
+    stop("mu and sigma have nonconformable dimensions")#
+  dm  <- length(mu)#
+  gh  <- gauss.hermite(n)#
+  #idx grows exponentially in n and dm#
+  idx <- as.matrix(expand.grid(rep(list(1:n),dm)))#
+  pts <- matrix(gh[idx,1],nrow(idx),dm)#
+  wts <- apply(matrix(gh[idx,2],nrow(idx),dm), 1, prod)#
+  ## prune#
+  if(!is.null(prune)) {#
+    qwt <- quantile(wts, probs=prune)#
+    pts <- pts[wts > qwt,]#
+    wts <- wts[wts > qwt]#
+  }#
+  ## rotate, scale, translate points#
+  eig <- eigen(sigma) #
+  rot <- eig$vectors %*% diag(sqrt(eig$values))#
+  pts <- t(rot %*% t(pts) + mu)#
+  return(list(points=pts, weights=wts))#
+}
+mgauss.hermite(10,0,1)
+mgauss.hermite(6,0,4)
+mgauss.hermite(10,0,4)
+mgauss.hermite(10,1,4)
+mgauss.hermite(10,0,2)
+mgauss.hermite(6,0,2)
+mgauss.hermite(6,0,1)
+sig <- matrix(c(1,0.5,0.5,1),2,2)#
+pts <- mgauss.hermite(10, mu=c(0,0), sigma=sig, prune=0.2)
+pts
+?gauss.quad
+k <- 5#
+#
+	myfn <- function(x, k) exp(-k * x^2)  # this is the integrand over (-Inf, +Inf)#
+#
+	# Integration using `integrate' function#
+#
+	ans1 <- integrate(myfn, lower=-Inf, upper=Inf, k=k)$val
+ans1
+integrate
+gherm <- gauss.hermite(10)
+gherm
+myfun
+myfu
+myfn
+myfn.new <- function(x) 1#
+#
+	mu <- 0#
+#
+	sigma <- 1/sqrt(k)#
+#
+	# following line shows how to use variable transformation #
+#
+	ans2 <- sum(gherm$weights * sigma * myfn.new(sigma*gherm$nodes +#
+mu))
+ans2 <- sum(gherm[,2] * sigma * myfn.new(sigma*[,1] +#
+mu))
+ans2 <- sum(gherm[,2] * sigma * myfn.new(sigma*gherm[,1] +#
+mu))
+ans
+ans2
+ans1
+ans2 <- sum(gherm[,2] * sigma * myfn(sigma*gherm[,1] +#
+mu))
+sigma <- 0.5/sqrt(k)#
+#
+	# following line shows how to use variable transformation #
+#
+	ans2 <- sum(gherm[,2]* myfn(sqrt(2)*sigma*gherm[,1] +#
+mu)) /sqrt(pi)
+ans2 <- sum(gherm[,2]* myfn(sqrt(2)*sigma*gherm[,1] +#
+mu,k)) /sqrt(pi)
+ans
+ans2
+ans2*2
+ans2 <- sum(gherm[,2]* myfn(sqrt(2)*sigma*gherm[,1] +#
+mu,1)) /sqrt(pi)
+ans2
+sigma <- 1/sqrt(2*k)#
+#
+	# following line shows how to use variable transformation #
+#
+	ans2 <- sum(gherm[,2]* myfn(sqrt(2)*sigma*gherm[,1] +#
+mu,5)) /sqrt(pi)
+ans2
+ans2 <- sum(gherm[,2]* myfn(sqrt(2)*sigma*gherm[,1] +#
+mu,51)) /sqrt(pi)
+ans2
+ans2 <- sum(gherm[,2]* myfn(sqrt(2)*sigma*gherm[,1] +#
+mu,1)) /sqrt(pi)
+ans2
+myfn.new <- function(x) 1#
+#
+	mu <- 0#
+#
+	sigma <- 1/sqrt(k)#
+#
+	# following line shows how to use variable transformation #
+#
+	ans2 <- sum(gherm[,2] * sigma * myfn.new(sigma*gherm[,1] + mu))
+ans2
+gherm[,1]
+require(statmod)
+install.packages("statmod")
+require(statmod)
+gauss.quad(n, kind="hermite")
+n <- 10
+gauss.quad(n, kind="hermite")
+gherm
+gherm <- gauss.quad(n, kind="hermite")#
+     myfn.new <- function(x) 1#
+#
+	mu <- 0#
+#
+	sigma <- 1/sqrt(k)#
+#
+	# following line shows how to use variable transformation #
+#
+	ans2 <- sum(gherm[,2] * sigma * myfn.new(sigma*gherm[,1] + mu))
+myfn.new <- function(x) 1#
+#
+	mu <- 0#
+#
+	sigma <- 1/sqrt(k)#
+#
+	# following line shows how to use variable transformation #
+#
+	ans2 <- sum(gherm$weights * sigma * myfn.new(sigma*gherm$nodes + mu))
+ans
+ans2
+ans1
+gauss.quad
+?gauss.quad
+?integrate
+library(depmixS4)
+head(speed)
+data(speed)
+speed
+install.packages("moveHMM")
+install.packages("NHMM")
+trackData <- read.table( "http://www.esapubs.org/archive/ecol/E085/072/elk_data.txt", sep="\t",header=TRUE)[1:735,c(1,2,3,7)]
+head(trackData)
+colnames(trackData)[1] <- "ID"#
+colnames(trackData)[4] <- "dist_water"#
+#
+trackData$Easting <- trackData$Easting/1000 #
+trackData$Northing <- trackData$Northing/1000#
+#
+head(trackData)
+data <- prepData(trackData,type="UTM",coordNames=c("Easting","Northing")
+)
+library(depmixS4)#
+library(hsmm)#
+library(NHMM)#
+library(moveHMM)
+data <- prepData(trackData,type="UTM",coordNames=c("Easting","Northing"))
+data
+head(data)
+head(trackData)
+summary(data)
+plot(data,compact=T)
+data$dist_water <- (data$dist_water-mean(data$dist_water))/sd(data$dist_water) ## initial parameters for gamma and von Mises distributions #
+mu0 <- c(0.1,1) # step mean (two parameters: one for each state) #
+sigma0 <- c(0.1,1) # step SD #
+zeromass0 <- c(0.1,0.05) # step zero-mass #
+stepPar0 <- c(mu0,sigma0,zeromass0) #
+angleMean0 <- c(pi,0) # angle mean #
+kappa0 <- c(1,1) # angle concentration #
+anglePar0 <- c(angleMean0,kappa0) ## call to fitting function
+m <- fitHMM(data=data,nbStates=2,stepPar0=stepPar0, anglePar0=anglePar0,formula=~dist_water)
+m
+CI(m)
+states <- viterbi(m)
+plotStates(m,animals="elk-115")
+m3 <- fitHMM(data=data,nbStates=3,stepPar0=stepPar0, anglePar0=anglePar0,formula=~dist_water)
+AIC(m,m3)
+library(rgdal)
+install.packages("rgdal")
+plotPR(m)
+data(NHMMdata)
+attach(NHMMdata)
+head(NHMMdata)
+str(NHMMdata)
+my.hmm1=HMM(y=ygamma, K=3, iters=100, burnin=10, emdist="gamma", nmix=3 , delta=TRUE)
+OBIC(my.hmm1)
+zz=Oz(my.hmm1) #compare with the truth zgamma
+zz
+qq=OQQ(my.hmm1)
+qq
+pp=OWcoef(my.hmm1,FALSE)
+tt=Oemparams(my.hmm1,FALSE)
+tt
+my.hmm1
+my.hmm2=HMM(y=ynormal, subseq=100, K=3, iters=100, burnin=10, emdist="normal", nmix=2, delta=FALSE)
+OBIC(my.hmm2)
+?OBIC
+?Oemparams
+str(my.hmm2)
+str(tt)
+tt
+str(Tt)
+my.nhmm3=NHMM(y=ypoisson, X=tX, K=3, iters=100, burnin=10, emdist="poisson", nmix=2, delta=TRUE)
+OBIC(my.nhmm3)
+?Oemparams
+tt=Oemparams(my.hmm3,FALSE)
+tt=Oemparams(my.nhmm3,FALSE)
+tt
+head(tt)
+str(tt)
+str(NHMMdata)
+load("~/Desktop/research/hmm_tut_cat/program/sim.RData")
+ls()
+source("~/Desktop/research/hmm_tut_cat/program/ZIPHMM.R")
+n <- 1000#
+M <- 3#
+delta0 <- rep(1/M,M)#
+p10 <- runif(1,0.3,0.8)#
+u <- runif(1, 0.8, 0.9)#
+gamma0 <- diag(u,M) + matrix((1-u)/M,M,M)#
+lambda0 <- seq(rnorm(1,50,2),rnorm(1,250,2),length=M)#
+#
+#actual sample#
+true <- zip_gen(n, M, 1, pi=delta0, a=gamma0, theta=lambda0, p1=p10)#
+y <- as.vector(true[,1])
+?HMM
+test <- HMM(y=y,K=3,iters=500,burnini=10,emdist="poisson",nmix=3,delta=T)
+test <- HMM(y=y,K=3,iters=500,burnin=10,emdist="poisson",nmix=3,delta=T)
+y <- as.matrix((true[,1]),ncol=1)
+test <- HMM(y=y,K=3,iters=500,burnin=10,emdist="poisson",nmix=3,delta=T)
+y
+test <- HMM(y=y,K=3,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+class(y)
+n <- 1000#
+M <- 2#
+delta0 <- rep(1/M,M)#
+p10 <- runif(1,0.3,0.8)#
+u <- runif(1, 0.8, 0.9)#
+gamma0 <- diag(u,M) + matrix((1-u)/M,M,M)#
+lambda0 <- seq(rnorm(1,50,2),rnorm(1,250,2),length=M)
+true <- zip_gen(n, M, 1, pi=delta0, a=gamma0, theta=lambda0, p1=p10)#
+y <- as.matrix((true[,1]),ncol=1)
+K <- 2#
+nmix <- 1
+K <- 2#
+nmix <- 1#
+prior1=array(0,dim=c(5,nmix,K)); prior1[1,1,1]=1; prior1[2,1,1]=0.02; prior1[1,1,2]=10; prior1[2,1,2]=0.04#
+test <- HMM(y=y,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T,prior=prior1)
+prior1
+K <- 2#
+nmix <- 1#
+prior1=array(0,dim=c(5,nmix,K,1)); prior1[1,1,1,]=1; prior1[2,1,1,]=0.02; prior1[1,1,2,]=10; prior1[2,1,2,]=0.04#
+test <- HMM(y=y,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T,prior=prior1)
+class(ygamma)
+str(ygamma)
+test <- HMM(y=ygamma,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+warnings()
+y
+test <- HMM(y=y,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+test <- HMM(y=y,subseq=F,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+test <- HMM(y=y,subseq=1000,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+test <- HMM(y=y,X=1,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+y <- as.matrix((true[,1]),ncol=2)
+test <- HMM(y=y,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+y
+y <- as.matrix((true[,1]),ncol=2)
+head(y)
+true[,1]
+y <- as.matrix((true[,1]),nrow=1000,ncol=2)
+head(y)
+y <- as.matrix((true[,1]),nrow=500,ncol=2)
+head(y)
+y <- cbind(y,y)
+head(y)
+test <- HMM(y=y,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+test
+str(test)
+tt=Oemparams(test,FALSE)
+tt
+qq=OQQ(test)
+pp=OWcoef(test)
+y <- true[,1]
+class(y)
+test <- HMM(y=y,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+y <- as.matrix(true[,1],ncol=1)
+test <- HMM(y=y,K=2,iters=500,burnin=10,emdist="poisson",nmix=1,delta=T)
+dim(y)
+apply(y[1,,],1,prod)
+str(trackData)
+x=rnorm(10,0,0.1)
+sd(x)
+x=rnorm(1000,0,0.1)
+sd(x)
+x=rnorm(10,0,0.1)
+sd(x)
+require(Rcpp)
+compileAttributes("ziphsmm_1.0.4")
+devtools::document()
+devtools::check()
+devtools::release()
